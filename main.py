@@ -66,6 +66,8 @@ class PropertyModel(QAbstractItemModel):
         self.properties = properties or []
         self.headers = ["Property", "Value"]
         self.is_undo_redo = False
+        self.even_row_color = QColor("#000000")
+        self.odd_row_color = QColor("#000000")
 
     def rowCount(self, parent=QModelIndex()):
         if not parent.isValid():
@@ -86,6 +88,8 @@ class PropertyModel(QAbstractItemModel):
                 return property_item.name
             elif index.column() == 1:
                 return property_item.value
+        elif role == Qt.BackgroundRole:
+            return self.even_row_color if index.row() % 2 == 0 else self.odd_row_color
         return None
 
     def headerData(self, section, orientation, role=Qt.DisplayRole):
@@ -139,6 +143,14 @@ class PropertyModel(QAbstractItemModel):
             yield
         finally:
             self.is_undo_redo = False
+
+    def setEvenRowColor(self, color):
+        self.even_row_color = QColor(color)
+        self.dataChanged.emit(self.index(0, 0), self.index(self.rowCount() - 1, self.columnCount() - 1), [Qt.BackgroundRole])
+
+    def setOddRowColor(self, color):
+        self.odd_row_color = QColor(color)
+        self.dataChanged.emit(self.index(0, 0), self.index(self.rowCount() - 1, self.columnCount() - 1), [Qt.BackgroundRole])
 
 
 class PropertyChangeCommand(QUndoCommand):
@@ -266,6 +278,12 @@ class MainWindow(QMainWindow):
         self.aboutAction = QAction("About", self)
         self.aboutAction.triggered.connect(self.about)
 
+        self.setEvenRowColorAction = QAction("Set Even Row Color", self)
+        self.setEvenRowColorAction.triggered.connect(self.setEvenRowColor)
+
+        self.setOddRowColorAction = QAction("Set Odd Row Color", self)
+        self.setOddRowColorAction.triggered.connect(self.setOddRowColor)
+
     def createMenus(self):
         menuBar = QMenuBar(self)
         fileMenu = menuBar.addMenu("&File")
@@ -274,6 +292,10 @@ class MainWindow(QMainWindow):
         editMenu = menuBar.addMenu("&Edit")
         editMenu.addAction(self.undoAction)
         editMenu.addAction(self.redoAction)
+
+        viewMenu = menuBar.addMenu("&View")
+        viewMenu.addAction(self.setEvenRowColorAction)
+        viewMenu.addAction(self.setOddRowColorAction)
 
         helpMenu = menuBar.addMenu("&Help")
         helpMenu.addAction(self.aboutAction)
@@ -284,7 +306,17 @@ class MainWindow(QMainWindow):
         editToolBar = QToolBar("Edit", self)
         editToolBar.addAction(self.undoAction)
         editToolBar.addAction(self.redoAction)
-        self.addToolBar(Qt.TopToolBarArea, editToolBar)
+        self.addToolBar(editToolBar)
+
+    def setEvenRowColor(self):
+        color = QColorDialog.getColor()
+        if color.isValid():
+            self.model.setEvenRowColor(color)
+
+    def setOddRowColor(self):
+        color = QColorDialog.getColor()
+        if color.isValid():
+            self.model.setOddRowColor(color)
 
     def about(self):
         QMessageBox.about(self, "About Undo Framework", "This example demonstrates the use of the QUndoStack class.")

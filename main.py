@@ -284,6 +284,9 @@ class MainWindow(QMainWindow):
         self.setOddRowColorAction = QAction("Set Odd Row Color", self)
         self.setOddRowColorAction.triggered.connect(self.setOddRowColor)
 
+        self.setBackgroundColorAction = QAction("Set Background Color", self)
+        self.setBackgroundColorAction.triggered.connect(self.setBackgroundColor)
+
     def createMenus(self):
         menuBar = QMenuBar(self)
         fileMenu = menuBar.addMenu("&File")
@@ -296,6 +299,7 @@ class MainWindow(QMainWindow):
         viewMenu = menuBar.addMenu("&View")
         viewMenu.addAction(self.setEvenRowColorAction)
         viewMenu.addAction(self.setOddRowColorAction)
+        viewMenu.addAction(self.setBackgroundColorAction)
 
         helpMenu = menuBar.addMenu("&Help")
         helpMenu.addAction(self.aboutAction)
@@ -317,6 +321,11 @@ class MainWindow(QMainWindow):
         color = QColorDialog.getColor()
         if color.isValid():
             self.model.setOddRowColor(color)
+
+    def setBackgroundColor(self):
+        color = QColorDialog.getColor()
+        if color.isValid():
+            self.setStyleSheet(f"QMainWindow {{ background-color: {color.name()}; }}")
 
     def about(self):
         QMessageBox.about(self, "About Undo Framework", "This example demonstrates the use of the QUndoStack class.")
